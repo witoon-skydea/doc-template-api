@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_restx import Api
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -13,6 +14,21 @@ load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+api = Api(
+    title="Document Template API",
+    version="1.0.0",
+    description="API for Document Template Management System",
+    doc="/apidocs/",
+    authorizations={
+        "Bearer": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+        }
+    },
+    security="Bearer"
+)
 
 def create_app(test_config=None):
     """Create and configure the Flask application"""
@@ -45,31 +61,8 @@ def create_app(test_config=None):
     from app.api.v1 import bp as api_v1_bp
     app.register_blueprint(api_v1_bp)
     
-    # Initialize Swagger documentation
-    from flasgger import Swagger
-    swagger = Swagger(app, template={
-        "info": {
-            "title": "Document Template API",
-            "description": "API for Document Template Management System",
-            "version": "1.0.0",
-            "contact": {
-                "email": "support@example.com"
-            }
-        },
-        "securityDefinitions": {
-            "Bearer": {
-                "type": "apiKey",
-                "name": "Authorization",
-                "in": "header",
-                "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
-            }
-        },
-        "security": [
-            {
-                "Bearer": []
-            }
-        ]
-    })
+    # Initialize API documentation
+    api.init_app(app)
     
     # Create database tables
     with app.app_context():
